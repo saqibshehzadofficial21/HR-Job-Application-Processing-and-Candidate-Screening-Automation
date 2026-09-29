@@ -433,7 +433,7 @@ Additional hygiene:
 
 - 💼 **GitHub:** [github.com/saqibshehzadofficial21](https://github.com/saqibshehzadofficial21)
 - 🔗 **LinkedIn:** [linkedin.com/in/saqibshehzadofficial01](https://www.linkedin.com/in/saqibshehzadofficial01/)
-- 📦 **Project Repo:** `https://github.com/saqibshehzadofficial21/<your-repo-name>`
+- 📦 **Project Repo:** `https://github.com/saqibshehzadofficial21/HR-Job-Application-Processing-and-Candidate-Screening-Automation.git`
 
 <div align="center">
 
