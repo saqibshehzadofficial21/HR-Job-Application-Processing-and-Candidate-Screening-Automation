@@ -1,0 +1,593 @@
+{
+  "name": "Capregsoft HR Job Application Processing and Candidate Screening Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extract candidate details from email\nconst emailBody = $input.item.json.body || $input.item.json.text || '';\nconst emailSubject = $input.item.json.subject || '';\n\n// Extract candidate name (looking for patterns like \"Name: John Doe\" or \"From: John Doe\")\nconst nameMatch = emailBody.match(/(?:Name|Applicant|Candidate)\\s*:?\\s*([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)+)/i) || \n                  emailSubject.match(/(?:Application from|From)\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)+)/i);\nconst candidateName = nameMatch ? nameMatch[1].trim() : '';\n\n// Extract email address\nconst emailMatch = emailBody.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}/);\nconst candidateEmail = emailMatch ? emailMatch[0] : '';\n\n// Extract phone number (various formats)\nconst phoneMatch = emailBody.match(/(?:Phone|Mobile|Contact|Tel)\\s*:?\\s*([+]?[\\d\\s\\-\\(\\)]{10,20})/i) ||\n                   emailBody.match(/[+]?[\\d]{1,3}[\\s\\-]?[\\(]?[\\d]{3}[\\)]?[\\s\\-]?[\\d]{3}[\\s\\-]?[\\d]{4}/);\nconst candidatePhone = phoneMatch ? phoneMatch[0].replace(/(?:Phone|Mobile|Contact|Tel)\\s*:?\\s*/i, '').trim() : '';\n\n// Extract position applied for\nconst positionMatch = emailSubject.match(/(?:Application for|Applying for|Position:|Job:)\\s*(.+?)(?:\\s*-|$)/i) ||\n                      emailBody.match(/(?:Position|Role|Job)\\s*(?:applied for|applying for)?\\s*:?\\s*([A-Za-z\\s]+)/i);\nconst position = positionMatch ? positionMatch[1].trim() : '';\n\n// Get CV attachment from binary data\nconst cvAttachment = $input.item.binary || {};\n\n// Return structured data\nreturn {\n  json: {\n    candidateName: candidateName,\n    candidateEmail: candidateEmail,\n    candidatePhone: candidatePhone,\n    position: position,\n    cvAttachment: cvAttachment,\n    emailBody: emailBody,\n    emailSubject: emailSubject\n  }\n};"
+      },
+      "id": "9ac5293b-aaac-48e0-9898-aea0b4949e7e",
+      "name": "Extract Candidate Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "74862256-5a53-44c9-94ea-e7fdf7de793f",
+      "name": "Prepare Sheet Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "173hjsYK_R5HsG688kWmwCRMzytFeOryjqCmIUJwjiM8",
+          "mode": "list",
+          "cachedResultName": "extract the same words form this page  \n write in...",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/173hjsYK_R5HsG688kWmwCRMzytFeOryjqCmIUJwjiM8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 423398141,
+          "mode": "list",
+          "cachedResultName": "extract the same words form this page  \n write in...",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/173hjsYK_R5HsG688kWmwCRMzytFeOryjqCmIUJwjiM8/edit#gid=423398141"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Requirement",
+              "displayName": "Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Array Type",
+              "displayName": "Array Type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Access Time",
+              "displayName": "Access Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Efficiency",
+              "displayName": "Efficiency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Memory Usage",
+              "displayName": "Memory Usage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "980b6ddd-1538-4be2-baa2-87ed4b632a6c",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        928,
+        912
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "83azWGTdV4lLl0kx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "subject:(application OR apply OR job)",
+          "readStatus": "unread"
+        },
+        "options": {
+          "dataPropertyAttachmentsPrefixName": "attachment_",
+          "downloadAttachments": true
+        }
+      },
+      "id": "91c2bb88-3e3b-439e-ba1f-b82fd8fbb84a",
+      "name": "Monitor Job Applications",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        720
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "c3ERkynsl1NnUcUE",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "bc240419441ssh@vu.edu.pk",
+        "subject": "YES",
+        "message": "=Dear {{ $json.candidateName }},\n\nThank you for applying to Capregsoft. We have received your application and our HR team will review it carefully.\n\nIf your profile matches our requirements, we will contact you to schedule an interview.\n\nBest regards,\nCapregsoft HR Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "97a6cce3-5838-44eb-a026-bcdaa6ead555",
+      "name": "Send Acknowledgment Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        928,
+        528
+      ],
+      "webhookId": "0daa12ba-4fa4-4247-9703-48e7cd76da86",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NQ7iyzQJvV8LrtQw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "filters": {}
+      },
+      "id": "5474e84b-832d-4968-9fec-51ba4c9a7ee2",
+      "name": "Notify HR Team",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        928,
+        720
+      ],
+      "webhookId": "348181e7-1799-4a77-8df0-2d1f7154d46a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "NQ7iyzQJvV8LrtQw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "toEmail",
+              "value": "={{ $('Extract Candidate Details').item.json.candidateEmail }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "subject",
+              "value": "Application Received - Capregsoft",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "candidateName",
+              "value": "={{ $('Extract Candidate Details').item.json.candidateName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b06fe88b-abe7-4fba-a6ba-989ee12ca20b",
+      "name": "Prepare Acknowledgment Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "candidateName",
+              "value": "={{ $('Extract Candidate Details').item.json.candidateName }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "candidateEmail",
+              "value": "={{ $('Extract Candidate Details').item.json.candidateEmail }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "position",
+              "value": "={{ $('Extract Candidate Details').item.json.position }}",
+              "type": "string"
+            },
+            {
+              "id": "id-4",
+              "name": "candidatePhone",
+              "value": "={{ $('Extract Candidate Details').item.json.candidatePhone }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "18afccb1-5d0e-44d7-b201-daef48428f7b",
+      "name": "Prepare HR Notification",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        704,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1698EQC4iwwQh7VvUuHdf0WDAH2J8odniRilSW8SEwZs",
+          "mode": "list",
+          "cachedResultName": "Sheet for shortlisted",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1698EQC4iwwQh7VvUuHdf0WDAH2J8odniRilSW8SEwZs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1698EQC4iwwQh7VvUuHdf0WDAH2J8odniRilSW8SEwZs/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "f68bc2b0-ab0c-40f6-bead-ae02d5ca9fae",
+      "name": "Monitor Sheet for Shortlisted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "83azWGTdV4lLl0kx",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "49800f43-64cd-4f0e-837f-5f01ad938d8d",
+      "name": "Check Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $('Monitor Sheet for Shortlisted').item.json.Status }}",
+              "rightValue": "Shortlisted",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "d8d48af0-5ed3-48eb-bf35-9733ed0a9ebd",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "37e0b2f9-0eae-49d5-94b0-841db9e9e4f2",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "id": "ec3f4372-2a22-4f10-9b84-c29195f17e0e",
+      "name": "Check if Shortlisted",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "options": {}
+      },
+      "id": "44cab67c-74c7-4375-8b8c-c8e2bb859e85",
+      "name": "Prepare Interview Email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.candidateEmail }}",
+        "subject": "=Interview Invitation - {{ $json.position }} - Capregsoft",
+        "message": "=Dear {{ $json.candidateName }},\n\nCongratulations! We are pleased to inform you that your application for the position of {{ $json.position }} has been shortlisted.\n\nWe would like to invite you for an interview:\n\nInterview Date: {{ $json.interviewDate }}\nInterview Time: {{ $json.interviewTime }}\n\nPlease confirm your availability by replying to this email.\n\nWe look forward to meeting you.\n\nBest regards,\nCapregsoft HR Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "1672ec4d-d098-468b-8fd8-25a5dccc4e19",
+      "name": "Send Interview Invitation",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1152,
+        304
+      ],
+      "webhookId": "edff49a3-de94-4ac9-842f-bdda8fde0d10",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "EmEP3BHcIJVNe2cx",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "1mo09XxVqy3E-PzdQlKxlU1OZy1sPdpJBJHpB9w0TBmM",
+          "mode": "list",
+          "cachedResultName": "HR-CV --",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1mo09XxVqy3E-PzdQlKxlU1OZy1sPdpJBJHpB9w0TBmM/edit?usp=drivesdk"
+        },
+        "title": "CV --",
+        "options": {}
+      },
+      "id": "f55c2367-d5c2-4561-b2e6-e2c5ac104b43",
+      "name": "Update Status to Invited",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1376,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "83azWGTdV4lLl0kx",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Save to Google Sheets": {
+      "main": [
+        []
+      ]
+    },
+    "Monitor Job Applications": {
+      "main": [
+        [
+          {
+            "node": "Extract Candidate Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Candidate Details": {
+      "main": [
+        [
+          {
+            "node": "Prepare Sheet Data",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare HR Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Sheet Data": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Acknowledgment Email": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare HR Notification": {
+      "main": [
+        [
+          {
+            "node": "Notify HR Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Monitor Sheet for Shortlisted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monitor Sheet for Shortlisted": {
+      "main": [
+        [
+          {
+            "node": "Check if Shortlisted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Shortlisted": {
+      "main": [
+        [
+          {
+            "node": "Prepare Interview Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Interview Email": {
+      "main": [
+        [
+          {
+            "node": "Send Interview Invitation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Interview Invitation": {
+      "main": [
+        [
+          {
+            "node": "Update Status to Invited",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "2075b64e-4d40-4443-99c8-290f0ae6d255",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "740e05a9166e99697b84ee82e1a30722ab3518a4e1224ec3c9410e02114365dd"
+  },
+  "id": "KBIyC3VoCKpS1Pxv",
+  "tags": []
+}
